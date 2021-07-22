@@ -2,6 +2,7 @@ package com.thomas.ttrpgimageshare;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -30,9 +31,9 @@ public class HostActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
-        if (getSupportActionBar() != null);
+        if (getSupportActionBar() != null)
             getSupportActionBar().hide();
-        View.OnClickListener addButtonClickListener = new View.OnClickListener(){
+        View.OnClickListener addButtonClickListener1 = new View.OnClickListener(){
             @Override
             public void onClick(View view) {
                 Log.d("HostActivity", "onClick: Test");
@@ -64,6 +65,14 @@ public class HostActivity extends AppCompatActivity {
                 }
             };
         };
+        View.OnClickListener addButtonClickListener = new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Intent startIntent = new Intent(HostActivity.this, SelectActivity.class);
+                startActivity(startIntent);
+            }
+        };
+
         Button addButton = findViewById(R.id.buttonAdd);
         addButton.setOnClickListener(addButtonClickListener);
 
