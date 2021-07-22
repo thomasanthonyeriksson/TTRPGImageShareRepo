@@ -1,16 +1,25 @@
 package com.thomas.ttrpgimageshare;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -45,7 +54,7 @@ public class HostActivity extends AppCompatActivity {
                     @Override
                     public boolean accept(File f, String name) {
                         return name.endsWith(".png") || name.endsWith(".PNG") || name.endsWith(".JPG") ||
-                                name.endsWith(".jpg");
+                                name.endsWith(".jpg") || name.endsWith(".jpeg");
                     }
                 };
 
@@ -57,5 +66,47 @@ public class HostActivity extends AppCompatActivity {
         };
         Button addButton = findViewById(R.id.buttonAdd);
         addButton.setOnClickListener(addButtonClickListener);
+
+        RecyclerView rvImages = (RecyclerView) findViewById(R.id.selectGrid);
+        SelectGridAdapter adapter = new SelectGridAdapter();
+        rvImages.setAdapter(adapter);
+        rvImages.setLayoutManager(new GridLayoutManager(this,3));
+
+    }
+
+    public static class ImageViewHolder extends RecyclerView.ViewHolder {
+        public final ImageView imageView;
+
+        public ImageViewHolder(View view) {
+            super(view);
+
+            imageView = (ImageView) view.findViewById(R.id.imageView);
+        }
+    }
+
+    public static class SelectGridAdapter extends RecyclerView.Adapter<ImageViewHolder> {
+
+        @NonNull
+        @Override
+        public ImageViewHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.image_grid_item, parent, false);
+
+            return new ImageViewHolder(view);
+        }
+
+        @SuppressLint("ResourceAsColor")
+        @Override
+        public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
+            if ( position % 2 == 0 )
+                holder.imageView.setBackgroundColor(Color.BLACK);
+            else
+                holder.imageView.setBackgroundColor(Color.WHITE);
+        }
+
+        @Override
+        public int getItemCount() {
+            return 11;
+        }
     }
 }
