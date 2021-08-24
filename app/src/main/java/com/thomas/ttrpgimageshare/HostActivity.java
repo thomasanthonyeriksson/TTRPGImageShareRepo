@@ -2,8 +2,12 @@ package com.thomas.ttrpgimageshare;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
@@ -11,10 +15,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -29,6 +38,10 @@ import java.io.FilenameFilter;
 public class HostActivity extends AppCompatActivity {
     int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 940424;
     private static String mRoomName = null;
+    private static String[] mImageFileNames = null;
+    private static File mAppImageDirectory = null;
+    private static SelectGridAdapter mAdapter = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,54 +49,38 @@ public class HostActivity extends AppCompatActivity {
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
         TextView textView = findViewById(R.id.hostText);
-        mRoomName= textView.getText().toString();
-        View.OnClickListener addButtonClickListener1 = new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                Log.d("HostActivity", "onClick: Test");
-                //String folderPath = "/storage/emulated/0/Download/";
-                if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
+        mRoomName = textView.getText().toString();
+        mAppImageDirectory = getApplicationContext().getDir(mRoomName, Context.MODE_PRIVATE);
+        mImageFileNames = mAppImageDirectory.list();
 
-                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-
-                    // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-                    // app-defined int constant that should be quite unique
-
-                    return;
-                }
-                File folderFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-
-                FilenameFilter filter = new FilenameFilter() {
+        ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
                     @Override
-                    public boolean accept(File f, String name) {
-                        return name.endsWith(".png") || name.endsWith(".PNG") || name.endsWith(".JPG") ||
-                                name.endsWith(".jpg") || name.endsWith(".jpeg");
+                    public void onActivityResult(ActivityResult result) {
+                        Log.d("HostActivity","Inside onActivityResult");
+                        mImageFileNames = mAppImageDirectory.list();
+                        mAdapter.notifyDataSetChanged();
                     }
-                };
+                });
 
-                String[] imageFileNames = folderFile.list(filter);
-                for (int i = 0; i < imageFileNames.length; i++) {
-                    Log.d("HostActivity", "Filename:"+imageFileNames[i]);
-                }
-            };
-        };
-        View.OnClickListener addButtonClickListener = new View.OnClickListener(){
+
+        View.OnClickListener addButtonClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent startIntent = new Intent(HostActivity.this, SelectActivity.class);
-                startActivity(startIntent);
+                someActivityResultLauncher.launch(startIntent);
             }
         };
+
 
         Button addButton = findViewById(R.id.buttonAdd);
         addButton.setOnClickListener(addButtonClickListener);
 
         RecyclerView rvImages = (RecyclerView) findViewById(R.id.selectGrid);
-        SelectGridAdapter adapter = new SelectGridAdapter();
-        rvImages.setAdapter(adapter);
-        rvImages.setLayoutManager(new GridLayoutManager(this,3));
+        mAdapter = new SelectGridAdapter();
+        rvImages.setAdapter(mAdapter);
+        rvImages.setLayoutManager(new GridLayoutManager(this, 3));
 
     }
 
@@ -111,15 +108,22 @@ public class HostActivity extends AppCompatActivity {
         @SuppressLint("ResourceAsColor")
         @Override
         public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-            if ( position % 2 == 0 )
-                holder.imageView.setBackgroundColor(Color.BLACK);
-            else
-                holder.imageView.setBackgroundColor(Color.WHITE);
+            File imgFile = new File(mAppImageDirectory, mImageFileNames[holder.getAdapterPosition()]);
+            Bitmap bmImg = BitmapFactory.decodeFile(imgFile.toString());
+            holder.imageView.setImageBitmap(bmImg);
+            View.OnClickListener imageViewClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.d("SelectActivity", "onClick:" + mImageFileNames[holder.getAdapterPosition()]);
+                }
+            };
+            holder.imageView.setOnClickListener(imageViewClickListener);
         }
 
         @Override
         public int getItemCount() {
-            return 11;
+            return mImageFileNames.length;
         }
+
     }
 }
