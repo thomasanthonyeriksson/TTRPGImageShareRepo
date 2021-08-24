@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,12 +28,15 @@ import java.io.FilenameFilter;
 
 public class HostActivity extends AppCompatActivity {
     int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 940424;
+    private static String mRoomName = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
         if (getSupportActionBar() != null)
             getSupportActionBar().hide();
+        TextView textView = findViewById(R.id.hostText);
+        mRoomName= textView.getText().toString();
         View.OnClickListener addButtonClickListener1 = new View.OnClickListener(){
             @Override
             public void onClick(View view) {

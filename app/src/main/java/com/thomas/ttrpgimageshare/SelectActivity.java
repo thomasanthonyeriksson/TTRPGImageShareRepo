@@ -2,6 +2,7 @@ package com.thomas.ttrpgimageshare;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,13 +25,41 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class SelectActivity extends AppCompatActivity {
 
     int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 940424;
     private static String[] mImageFileNames = null;
     private static File mFileFolder = null;
+    public static void copyFile(Context context, String inputFile) {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            //create output directory if it doesn't exist
+            File dir = context.getDir("Room_Z4HG", Context.MODE_PRIVATE);
+            in = new FileInputStream(mFileFolder.getPath()+ File.separator + inputFile);
+            out = new FileOutputStream(dir.getPath() + File.separator + inputFile);
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            in.close();
+            // write the output file
+            out.flush();
+            out.close();
+        }
+        catch (IOException fnfe1) {
+            Log.e("SelectActivity", fnfe1.getMessage());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,8 +78,8 @@ public class SelectActivity extends AppCompatActivity {
 
             return;
         }
-        mFileFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
+        mFileFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         FilenameFilter filter = new FilenameFilter() {
             @Override
             public boolean accept(File f, String name) {
@@ -66,6 +95,7 @@ public class SelectActivity extends AppCompatActivity {
         rvImages.setAdapter(adapter);
         rvImages.setLayoutManager(new GridLayoutManager(this,3));
 
+
     }
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
@@ -80,6 +110,7 @@ public class SelectActivity extends AppCompatActivity {
 
     public static class SelectGridAdapter extends RecyclerView.Adapter<ImageViewHolder> {
 
+
         @NonNull
         @Override
         public ImageViewHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
@@ -92,14 +123,23 @@ public class SelectActivity extends AppCompatActivity {
         @SuppressLint("ResourceAsColor")
         @Override
         public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-            File imgFile = new  File(mFileFolder,mImageFileNames[position]);
+            File imgFile = new File(mFileFolder, mImageFileNames[position]);
             Bitmap bmImg = BitmapFactory.decodeFile(imgFile.toString());
             holder.imageView.setImageBitmap(bmImg);
+            View.OnClickListener imageViewClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.d("SelectActivity", "onClick:"+mImageFileNames[position]);
+                    copyFile(view.getContext(), mImageFileNames[position]);
+                }
+            };
+            holder.imageView.setOnClickListener(imageViewClickListener);
         }
 
         @Override
         public int getItemCount() {
             return mImageFileNames.length;
         }
+
     }
 }
